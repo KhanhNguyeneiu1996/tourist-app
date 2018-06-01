@@ -17,6 +17,9 @@ import com.example.nguyen.tourist_app.dataModel.WikipediaPage;
 import java.util.Arrays;
 import java.util.List;
 
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+
 public class MainActivity extends AppCompatActivity {
     private PlacesViewModel placesViewModel;
     private RecyclerView recyclerView;
@@ -31,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
+        placesViewModel = ViewModelProviders.of(this,createViewModelFactory()).get(PlacesViewModel.class);
         placesViewModel = ViewModelProviders.of(this).get(PlacesViewModel.class);
         LiveData<List<WikipediaPage>> placesData = placesViewModel.getPlacesList();
         placesData.observe(this, new Observer<List<WikipediaPage>>() {
@@ -48,6 +52,22 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
+    private PlacesViewModel.PlacesViewModelFactory createViewModelFactory(){
+        Retrofit retrofit = createRetrofit();
+        WikipediaService wikipediaService= retrofit.create(WikipediaService.class);
+        PlacesRepository placesRepository= new PlacesRepository(wikipediaService);
+        PlacesViewModel.PlacesViewModelFactory factory = new PlacesViewModel.PlacesViewModelFactory(placesRepository);
+        return factory;
+    }
+    private Retrofit createRetrofit(){
+        Retrofit retrofit = new Retrofit.Builder()
+                .addConverterFactory(GsonConverterFactory.create())
+                .baseUrl("https://en.wikipedia.org")
+                .build();
+        return retrofit;
+    }
+
+
 
 }
 //public class PlacesViewModel extends ViewModel {
